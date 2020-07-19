@@ -132,7 +132,7 @@ get_label_color() {
 # it returns an array of labels
 add_label() {
   echo $(curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
-    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number}/labels")
+    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels")
 }
 
 delete_label() {
