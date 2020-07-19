@@ -1,0 +1,11 @@
+name: 'pull-request-labeler'
+description: 'Label a pull request based on the size'
+inputs:
+  GITHUB_TOKEN:
+    description: 'Github token'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{inputs.GITHUB_TOKEN}}
