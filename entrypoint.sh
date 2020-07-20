@@ -43,7 +43,6 @@ autolabel() {
 
   # Check if pr has been labeled already
   labels=$(echo "$body" | jq -r '.labels[] | @base64')
-  skip=0
   existing_label=""
 
   for label in "${labels[@]}"; do
@@ -55,11 +54,11 @@ autolabel() {
 
     if [ "$label_name" = "$label_to_add" ]; then
       # Already labeled
-      skip=1
       existing_label="$label"
     else
       array=("${LABLELS_ARR[@]/$label_to_add}")
-      if [[ "${array[@]}" =~ "${label_name}" ]]; then
+
+      if [[ " ${array[@]} " =~ " ${label_name} " ]]; then
         # Has an outdated label and needs to be remove it
         echo "[INFO] Removing label $label_name"
         delete_label "$label_name"
@@ -114,7 +113,7 @@ label_for() {
 }
 
 get_label_color() {
-  if [ "$1" = "$LABEL_XS"]; then
+  if [ "$1" = "$LABEL_XS" ]; then
     color="$XS_COLOR"
   elif [ "$1" = "$LABEL_SM" ]; then
     color="$SM_COLOR"
@@ -131,8 +130,8 @@ get_label_color() {
 # Add a label to an issue
 # it returns an array of labels
 add_label() {
-  echo $(curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
-    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels")
+  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
+    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels"
 }
 
 delete_label() {
@@ -143,7 +142,7 @@ delete_label() {
 update_label_color() {
   #https://developer.github.com/v3/issues/labels/#get-a-label
   curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X PATCH -H "Content-Type: application/json" -d \
-    "{\"color\": [\"$2\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/labels/$1"
+    "{\"color\": \"$2\"}" "${URI}/repos/${GITHUB_REPOSITORY}/labels/$1"
 }
 
 autolabel
