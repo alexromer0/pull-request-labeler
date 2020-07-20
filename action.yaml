@@ -1,11 +1,31 @@
 name: 'pull-request-labeler'
-description: 'Label a pull request based on the size'
+description: 'Label a pull request based on number of lines modified'
 inputs:
   GITHUB_TOKEN:
     description: 'Github token'
     required: true
+  xs_limit:
+    description: 'Max value for a extra small PR'
+    required: false
+    default: '20'
+  sm_limit:
+    description: 'Max value for a small PR'
+    required: false
+    default: '50'
+  md_limit:
+    description: 'Max value for a medium PR'
+    required: false
+    default: '200'
+  lg_limit:
+    description: 'Max value for a large PR'
+    required: false
+    default: '500'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
     - ${{inputs.GITHUB_TOKEN}}
+    - ${{inputs.xs_limit}}
+    - ${{inputs.sm_limit}}
+    - ${{inputs.md_limit}}
+    - ${{inputs.lg_limit}}
