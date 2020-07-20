@@ -3,6 +3,10 @@ set -e
 
 ## Constants
 GITHUB_TOKEN="$1"
+XS_LIMIT="$2"
+SM_LIMIT="$3"
+MD_LIMIT="$4"
+LG_LIMIT="$5"
 URI="https://api.github.com"
 API_HEADER="Accept: application/vnd.github.v3.json"
 AUTH_HEADER="Authorization: token ${GITHUB_TOKEN}"
@@ -51,13 +55,13 @@ update_label_color() {
 }
 
 label_for() {
-  if [ "$1" -lt 20 ]; then
+  if [ "$1" -lt "$XS_LIMIT" ]; then
     label="$LABEL_XS"
-  elif [ "$1" -lt 100 ]; then
+  elif [ "$1" -lt "$SM_LIMIT" ]; then
     label="$LABEL_SM"
-  elif [ "$1" -lt 500 ]; then
+  elif [ "$1" -lt "$MD_LIMIT" ]; then
     label="$LABEL_MD"
-  elif [ "$1" -lt 1000 ]; then
+  elif [ "$1" -lt "$LG_LIMIT" ]; then
     label="$LABEL_LG"
   else
     label="$LABEL_XL"
