@@ -16,7 +16,6 @@ LABEL_SM="size-sm"
 LABEL_MD="size-md"
 LABEL_LG="size-lg"
 LABEL_XL="size-xl"
-LABELS_ARR=("$LABEL_XS $LABEL_SM $LABEL_MD $LABEL_LG $LABEL_XL")
 
 if [ -z "$GITHUB_REPOSITORY" ]; then
   echo "[ERROR] The env variable GITHUB_REPOSITORY is required"
@@ -33,67 +32,22 @@ echo "$GITHUB_EVENT_PATH"
 
 number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 
-autolabel() {
-  #https://developer.github.com/v3/pulls/#get-a-pull-request
-  body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" "${URI}/repos/${GITHUB_REPOSITORY}/pulls/${number}")
-  additions=$(echo "$body" | jq '.additions')
-  deletions=$(echo "$body" | jq '.deletions')
-  total_modifications=$(echo "$additions + $deletions" | bc)
-  label_to_add=$(label_for "$total_modifications")
+# Add a label to an issue
+# it returns an array of labels
+add_label() {
+  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
+    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels"
+}
 
-  # Check if pr has been labeled already
-  labels=$(echo "$body" | jq -r '.labels[] | @base64')
-  existing_label=""
+delete_label() {
+  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X DELETE -H "Content-Type: application/json" \
+    "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels/$1"
+}
 
-  for label in "${labels[@]}"; do
-    _parse() {
-      echo "$label" | base64 --decode | jq -r "$1"
-    }
-
-    label_name=$(_parse '.name')
-
-    if [ "$label_name" = "$label_to_add" ]; then
-      # Already labeled
-      existing_label="$label"
-    else
-      array=("${LABELS_ARR[@]/$label_to_add}")
-
-      if [[ " ${array[@]} " =~ " ${label_name} " ]]; then
-        # Has an outdated label and needs to be remove it
-        echo "[INFO] Removing label $label_name"
-        delete_label "$label_name"
-      fi
-    fi
-  done
-
-  if [ -z "$existing_label" ]; then
-    # The label already exists encoded
-    label_existing_color=$(echo "$existing_label" | base64 --decode | jq -r '.color')
-    label_color=$(get_label_color "$label_to_add")
-    if [ "$label_existing_color" != "$label_color" ]; then
-      echo "[INFO] Updating label color..."
-      update_label_color "$label_to_add" "$label_color"
-    fi
-  else
-    echo "[INFO] Labelling pull request with $label_to_add"
-    new_labels=$(add_label "$label_to_add" | jq -r '.[] | @base64')
-    # Check if the label color is correct
-    for label in "${new_labels[@]}"; do
-      _parse() {
-        echo "$label" | base64 --decode | jq -r "$1"
-      }
-      label_name=$(_parse '.name')
-      if [ "$label_name" = "$label_to_add" ]; then
-        label_color=$(get_label_color "$label_name")
-        if [ $(_parse '.color') != "$label_color" ]; then
-          echo "[INFO] Updating label color..."
-          update_label_color "$label_to_add" "$label_color"
-        fi
-        break
-      fi
-    done
-  fi
-
+update_label_color() {
+  #https://developer.github.com/v3/issues/labels/#get-a-label
+  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X PATCH -H "Content-Type: application/json" -d \
+    "{\"color\": \"$2\"}" "${URI}/repos/${GITHUB_REPOSITORY}/labels/$1"
 }
 
 label_for() {
@@ -127,22 +81,80 @@ get_label_color() {
   echo "$color"
 }
 
-# Add a label to an issue
-# it returns an array of labels
-add_label() {
-  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
-    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels"
+check_for_existing() {
+  label=""
+  if [ "$1" = "$LABEL_XS" ]; then
+    label=$1
+  elif [ "$1" = "$LABEL_SM" ]; then
+    label="$1"
+  elif [ "$1" = "$LABEL_MD" ]; then
+    label="$1"
+  elif [ "$1" = "$LABEL_LG" ]; then
+    label="$1"
+  elif [ "$1" = "$LABEL_XL" ]; then
+    label="$1"
+  fi
+
+  if [ -n "$label" ]; then
+    echo "[INFO] Removing label $label"
+    delete_label "$label"
+  fi
 }
 
-delete_label() {
-  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X DELETE -H "Content-Type: application/json" \
-    "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels/$1"
-}
+autolabel() {
+  #https://developer.github.com/v3/pulls/#get-a-pull-request
+  body=$(curl -sSL -H "${AUTH_HEADER}" -H "${API_HEADER}" "${URI}/repos/${GITHUB_REPOSITORY}/pulls/${number}")
+  additions=$(echo "$body" | jq '.additions')
+  deletions=$(echo "$body" | jq '.deletions')
+  total_modifications=$(echo "$additions + $deletions" | bc)
+  label_to_add=$(label_for "$total_modifications")
 
-update_label_color() {
-  #https://developer.github.com/v3/issues/labels/#get-a-label
-  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X PATCH -H "Content-Type: application/json" -d \
-    "{\"color\": \"$2\"}" "${URI}/repos/${GITHUB_REPOSITORY}/labels/$1"
+  # Check if pr has been labeled already
+  labels=$(echo "$body" | jq -r '.labels[] | @base64')
+  existing_label=""
+
+  for label in "${labels[@]}"; do
+    _parse() {
+      echo "$label" | base64 --decode | jq -r "$1"
+    }
+
+    label_name=$(_parse '.name')
+
+    if [ "$label_name" = "$label_to_add" ]; then
+      # Already labeled
+      existing_label="$label"
+    else
+      check_for_existing "$label_name"
+    fi
+  done
+
+  if [ -z "$existing_label" ]; then
+    # The label already exists encoded
+    label_existing_color=$(echo "$existing_label" | base64 --decode | jq -r '.color')
+    label_color=$(get_label_color "$label_to_add")
+    if [ "$label_existing_color" != "$label_color" ]; then
+      echo "[INFO] Updating label $label_to_add color..."
+      update_label_color "$label_to_add" "$label_color"
+    fi
+  else
+    echo "[INFO] Labelling pull request with $label_to_add"
+    new_labels=$(add_label "$label_to_add" | jq -r '.[] | @base64')
+    # Check if the label color is correct
+    for label in "${new_labels[@]}"; do
+      _parse() {
+        echo "$label" | base64 --decode | jq -r "$1"
+      }
+      label_name=$(_parse '.name')
+      if [ "$label_name" = "$label_to_add" ]; then
+        label_color=$(get_label_color "$label_name")
+        if [ "$(_parse '.color')" != "$label_color" ]; then
+          echo "[INFO] Updating label $label_name color..."
+          update_label_color "$label_name" "$label_color"
+        fi
+        break
+      fi
+    done
+  fi
 }
 
 autolabel
