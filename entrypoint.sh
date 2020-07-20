@@ -58,7 +58,7 @@ autolabel() {
       skip=1
       existing_label="$label"
     else
-      array=("${LABLELS_ARR[@]/$label_to_add/}")
+      array=("${LABLELS_ARR[@]/$label_to_add}")
       if [[ "${array[@]}" =~ "${label_name}" ]]; then
         # Has an outdated label and needs to be remove it
         echo "[INFO] Removing label $label_name"
@@ -137,7 +137,7 @@ add_label() {
 
 delete_label() {
   curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X DELETE -H "Content-Type: application/json" \
-    "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number}/labels/$1"
+    "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels/$1"
 }
 
 update_label_color() {
