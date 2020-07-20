@@ -35,8 +35,8 @@ number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 # Add a label to an issue
 # it returns an array of labels
 add_label() {
-  curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
-    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels"
+  echo "$(curl -sSL -H "$AUTH_HEADER" -H "$API_HEADER" -X POST -H "Content-Type: application/json" -d \
+    "{\"labels\": [\"$1\"]}" "${URI}/repos/${GITHUB_REPOSITORY}/issues/$number/labels")"
 }
 
 delete_label() {
@@ -131,6 +131,7 @@ autolabel() {
   if [ -n "$existing_label" ]; then
     # The label already exists encoded
     label_existing_color=$(echo "$existing_label" | base64 --decode | jq -r '.color')
+    echo "[INFO] Label existing color $label_existing_color"
     label_color=$(get_label_color "$label_to_add")
     if [ "$label_existing_color" != "$label_color" ]; then
       echo "[INFO] Updating existing label $label_to_add color..."
@@ -139,6 +140,10 @@ autolabel() {
   else
     echo "[INFO] Labelling pull request with $label_to_add"
     new_labels=$(add_label "$label_to_add" | jq -r '.[] | @base64')
+    if [ -z "$new_labels" ]; then
+      echo "[ERROR] new labels wrong parsed"
+      exit 1
+    fi
     # Check if the label color is correct
     for label in "${new_labels[@]}"; do
       _parse() {
@@ -147,7 +152,9 @@ autolabel() {
       label_name=$(_parse '.name')
       if [ "$label_name" = "$label_to_add" ]; then
         label_color=$(get_label_color "$label_name")
-        if [ "$(_parse '.color')" != "$label_color" ]; then
+        label_current_color=$(_parse '.color')
+        echo "[INFO] Label $label_name current color: $label_current_color"
+        if [ "$label_current_color" != "$label_color" ]; then
           echo "[INFO] Updating new label $label_name color..."
           update_label_color "$label_name" "$label_color"
         fi
