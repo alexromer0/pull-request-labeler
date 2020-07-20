@@ -1,4 +1,4 @@
-name: 'pull-request-labeler'
+name: 'pr-size-labelator'
 description: 'Label a pull request based on number of lines modified'
 inputs:
   GITHUB_TOKEN:
