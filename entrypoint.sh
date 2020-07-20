@@ -128,12 +128,12 @@ autolabel() {
     fi
   done
 
-  if [ -z "$existing_label" ]; then
+  if [ -n "$existing_label" ]; then
     # The label already exists encoded
     label_existing_color=$(echo "$existing_label" | base64 --decode | jq -r '.color')
     label_color=$(get_label_color "$label_to_add")
     if [ "$label_existing_color" != "$label_color" ]; then
-      echo "[INFO] Updating label $label_to_add color..."
+      echo "[INFO] Updating existing label $label_to_add color..."
       update_label_color "$label_to_add" "$label_color"
     fi
   else
@@ -148,7 +148,7 @@ autolabel() {
       if [ "$label_name" = "$label_to_add" ]; then
         label_color=$(get_label_color "$label_name")
         if [ "$(_parse '.color')" != "$label_color" ]; then
-          echo "[INFO] Updating label $label_name color..."
+          echo "[INFO] Updating new label $label_name color..."
           update_label_color "$label_name" "$label_color"
         fi
         break
