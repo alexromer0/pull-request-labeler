@@ -6,7 +6,6 @@ GITHUB_TOKEN="$1"
 URI="https://api.github.com"
 API_HEADER="Accept: application/vnd.github.v3.json"
 AUTH_HEADER="Authorization: token ${GITHUB_TOKEN}"
-LABELS_ARR=("size-xs size-sm size-md size-lg size-xl")
 XS_COLOR="00FF3A"
 SM_COLOR="9CFF00"
 MD_COLOR="EFFF00"
@@ -17,6 +16,7 @@ LABEL_SM="size-sm"
 LABEL_MD="size-md"
 LABEL_LG="size-lg"
 LABEL_XL="size-xl"
+LABELS_ARR=("$LABEL_XS $LABEL_SM $LABEL_MD $LABEL_LG $LABEL_XL")
 
 if [ -z "$GITHUB_REPOSITORY" ]; then
   echo "[ERROR] The env variable GITHUB_REPOSITORY is required"
@@ -56,7 +56,7 @@ autolabel() {
       # Already labeled
       existing_label="$label"
     else
-      array=("${LABLELS_ARR[@]/$label_to_add}")
+      array=("${LABELS_ARR[@]/$label_to_add}")
 
       if [[ " ${array[@]} " =~ " ${label_name} " ]]; then
         # Has an outdated label and needs to be remove it
