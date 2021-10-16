@@ -30,6 +30,11 @@ jobs:
           sm_limit: '100'
           md_limit: '300'
           lg_limit: '600'
+          custom_tag_xs: 'size-xs'
+          custom_tag_sm: 'size-sm'
+          custom_tag_md: 'size-md'
+          custom_tag_lg: 'size-lg'
+          custom_tag_xl: 'size-xl'
 ```
 
 Feel free to adjust the size limits to your needs
@@ -58,4 +63,9 @@ jobs:
           sm_limit: '100'
           md_limit: '300'
           lg_limit: '600'
+          custom_tag_xs: 'size-xs'
+          custom_tag_sm: 'size-sm'
+          custom_tag_md: 'size-md'
+          custom_tag_lg: 'size-lg'
+          custom_tag_xl: 'size-xl'
 ```

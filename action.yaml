@@ -20,6 +20,26 @@ inputs:
     description: 'Max value for a large PR'
     required: false
     default: '500'
+  custom_tag_xs:
+    description: 'Custom tag to be written for extra small PR'
+    required: false
+    default: 'size-sm'
+  custom_tag_sm:
+    description: 'Custom tag to be written for small PR'
+    required: false
+    default: 'size-sm'
+  custom_tag_md:
+    description: 'Custom tag to be written for medium PR'
+    required: false
+    default: 'size-sm'
+  custom_tag_lg:
+    description: 'Custom tag to be written for large PR'
+    required: false
+    default: 'size-sm'
+  custom_tag_xl:
+    description: 'Custom tag to be written for extra large PR'
+    required: false
+    default: 'size-sm'
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -29,3 +49,8 @@ runs:
     - ${{inputs.sm_limit}}
     - ${{inputs.md_limit}}
     - ${{inputs.lg_limit}}
+    - ${{inputs.custom_tag_xs}}
+    - ${{inputs.custom_tag_sm}}
+    - ${{inputs.custom_tag_md}}
+    - ${{inputs.custom_tag_lg}}
+    - ${{inputs.custom_tag_xl}}
